@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wishclock</title>
+  <meta name="description" content="How long until you can afford a house, a car or a wedding, based on your salary.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-head">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <h1>Wishclock</h1>
+        <p>Every wish has a countdown. Find yours.</p>
+      </div>
+    </div>
+    <button type="button" id="reset" class="ghost-btn">Reset to example</button>
+  </header>
+
+  <main class="layout">
+    <aside class="inputs">
+      <section class="card" aria-labelledby="money-h">
+        <h2 id="money-h" class="card-h">Your money</h2>
+        <div id="profile-fields"></div>
+      </section>
+
+      <section class="card" aria-labelledby="goals-h">
+        <div class="card-h-row">
+          <h2 id="goals-h" class="card-h">Your goals, in order</h2>
+        </div>
+        <p class="card-intro">You save for one goal at a time, top to bottom. Use the arrows to change the order.</p>
+        <div id="goal-list"></div>
+        <div class="add-row">
+          <span>Add</span>
+          <button type="button" class="add-btn" data-add="house">House</button>
+          <button type="button" class="add-btn" data-add="car">Car</button>
+          <button type="button" class="add-btn" data-add="wedding">Wedding</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="results" aria-live="polite">
+      <div id="headline" class="headline"></div>
+      <div id="summary" class="tiles"></div>
+
+      <section class="card" aria-labelledby="tl-h">
+        <h2 id="tl-h" class="card-h">Timeline</h2>
+        <p class="card-intro">Savings grow, drop when you buy, then grow again. Bars show time spent saving (light) and repaying a loan (solid).</p>
+        <div id="chart" class="chart"></div>
+        <div class="legend" aria-hidden="true">
+          <span><i class="lg-line"></i>Savings balance</span>
+          <span><i class="lg-saving"></i>Saving for the goal</span>
+          <span><i class="lg-loan"></i>Repaying a loan</span>
+          <span><i class="lg-dot"></i>Bought</span>
+        </div>
+        <details class="yearly-wrap">
+          <summary>Year-by-year numbers</summary>
+          <div id="yearly" class="table-scroll"></div>
+        </details>
+      </section>
+
+      <section class="card whatif" aria-labelledby="wi-h">
+        <h2 id="wi-h" class="card-h">What if you saved more?</h2>
+        <div class="whatif-row">
+          <input type="range" id="extra" min="-50000" max="150000" step="5000" value="0" aria-describedby="extra-label">
+          <output id="extra-label" for="extra">No change</output>
+        </div>
+        <p id="whatif-result" class="whatif-result"></p>
+      </section>
+
+      <div id="breakdowns" class="breakdowns"></div>
+
+      <footer class="foot">
+        <p id="asof"></p>
+        <p>Each month the plan adds your pay (raised once a year), takes away living costs (rising with inflation), loan instalments and running costs, and adds interest on savings. When there is enough cash for the next goal at that month’s price, you buy it.</p>
+      </footer>
+    </section>
+  </main>
+
+  <script type="module" src="src/ui/app.js"></script>
+</body>
+</html>

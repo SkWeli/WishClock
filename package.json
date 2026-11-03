@@ -1,0 +1,16 @@
+{
+  "name": "wishclock",
+  "version": "0.1.0",
+  "description": "How long until you can afford a house, a car or a wedding — from your salary, with a deep cost model and a month-by-month simulation.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "npx --yes serve@14.2.4 -l 3000 .",
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.2"
+  },
+  "license": "MIT"
+}
