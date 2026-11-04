@@ -8,6 +8,7 @@ import { renderTimeline, yearlyTable, renderRetirementChart } from './chart.js';
 import { money, duration, monthYear, qtyLabel, esc } from './format.js';
 import { startVisitCounter } from './visits.js';
 import { startTour, hasSeenTour } from './tour.js';
+import { goalIcon, ICONS } from './icons.js';
 
 // Bump this when the example plan changes, so everyone starts from the new example.
 const STORAGE_KEY = 'wishclock:v3';
@@ -300,6 +301,7 @@ function goalCard(g, i, n) {
   const who = payerLabel(g);
   return `<article class="goal" data-id="${g.id}" style="--goal: var(--series-${g.slot + 1})">
     <header class="goal-head">
+      <span class="goal-icon">${goalIcon(g.kind)}</span>
       <div class="goal-title">
         <input class="goal-name" value="${esc(g.name)}" aria-label="Goal name" maxlength="24">
         <span class="goal-sub"><span class="order">${i + 1}</span> ${esc(mod.label)} · <span class="goal-cost"></span>${who ? ` · paid by ${esc(who.toLowerCase() === 'together' ? 'everyone' : who)}` : ''}</span>
@@ -496,9 +498,9 @@ function renderResults() {
   $('#people-count').textContent = state.people.length;
   $('#goal-count').textContent = state.goals.length;
 
+  renderRetirement(built);
   $('#headline').innerHTML = headline(result);
   $('#summary').innerHTML = built.map((g, i) => tile(g, result.goals[i], baseline?.goals[i])).join('');
-  renderRetirement(built);
   $('#strip').innerHTML = strip(built, result);
   $('#whatif-result').innerHTML = whatIfText(built, result, baseline);
   if (currentTab() === 'plan') drawChart();
@@ -639,21 +641,40 @@ function strip(built, result) {
 function headline(result) {
   const goals = result.goals;
   const many = state.people.length > 1;
-  if (!goals.length) return '<h2>Add a goal to start</h2><p><a href="#goals">Go to Goals →</a></p>';
+  const eyebrow = `<span class="eyebrow">${ICONS.clock} Your plan${many ? ` · ${state.people.length} people` : ''}</span>`;
+  if (!goals.length) return `<div class="hero">${eyebrow}<h2>Add a goal to start</h2><p><a class="hero-link" href="#goals">Go to Goals →</a></p></div>`;
   const missing = goals.filter((g) => !g.reached);
-  if (missing.length === goals.length) return `<h2>None of these goals fit the budget yet</h2><p>${esc(missing[0].reason)}</p>`;
-  const lastBuy = Math.max(...goals.filter((g) => g.reached).map((g) => g.month));
-  const debtFree = Math.max(...goals.filter((g) => g.reached).map((g) => g.ownedOutrightMonth));
+  if (missing.length === goals.length) return `<div class="hero">${eyebrow}<h2>None of these goals fit the budget yet</h2><p>${esc(missing[0].reason)}</p></div>`;
+  const reached = goals.filter((g) => g.reached);
+  const lastBuy = Math.max(...reached.map((g) => g.month));
+  const debtFree = Math.max(...reached.map((g) => g.ownedOutrightMonth));
   const when = monthYear(result.goals.find((g) => g.month === lastBuy).date);
-  const free = debtFree > lastBuy ? ` Loans are paid off in <strong>${duration(debtFree)}</strong>.` : '';
   const interns = state.people.filter((p) => p.status !== 'permanent' && monthsUntil(startDate(), p.changeAt) > 0);
   const poss = (n) => (n.toLowerCase() === 'you' ? 'your' : `${n}’s`);
-  const note = interns.length ? ` This includes ${esc(interns.map((p) => poss(p.name)).join(' and '))} pay rise when the new job starts.` : '';
-  if (missing.length) {
-    return `<h2>${goals.length - missing.length} of ${goals.length} goals are within reach</h2><p>${esc(missing.map((g) => g.name).join(', '))} ${missing.length > 1 ? 'are' : 'is'} out of reach with these numbers.${free}</p>`;
-  }
-  const who = many ? 'Together you can have' : 'You can have';
-  return `<h2>${who} ${goals.length > 1 ? 'all of it' : 'it'} in <span class="hl">${duration(lastBuy)}</span></h2><p>That’s ${when}.${free}${note}</p>`;
+  const note = interns.length ? `Includes ${esc(interns.map((p) => poss(p.name)).join(' and '))} pay rise when the new job starts.` : '';
+  const title = missing.length
+    ? `${goals.length - missing.length} of ${goals.length} goals are within reach`
+    : `${many ? 'Together you can have' : 'You can have'} ${goals.length > 1 ? 'all of it' : 'it'} in <span class="hl">${duration(lastBuy)}</span>`;
+  const sub = missing.length
+    ? `${esc(missing.map((g) => g.name).join(', '))} ${missing.length > 1 ? 'are' : 'is'} out of reach with these numbers.`
+    : note;
+  const stats = [
+    { label: missing.length ? 'Reachable goals by' : 'Every goal by', value: when, sub: `in ${duration(lastBuy)}` },
+    debtFree > lastBuy ? { label: 'Loan-free', value: monthYear(addMonths(startDate(), debtFree)), sub: `in ${duration(debtFree)}` } : { label: 'Loans', value: 'None', sub: 'Paid in cash' },
+    lastRetire ? {
+      label: 'Retirement',
+      value: lastRetire.shortfall <= 0 ? 'On track' : 'Short',
+      sub: lastRetire.earliestMonth != null
+        ? `at this rate, age ${Math.floor((state.people[0].age || 0) + lastRetire.earliestMonth / 12)}${many ? ` (${esc(state.people[0].name)})` : ''}`
+        : 'not reached yet',
+      tone: lastRetire.shortfall <= 0 ? 'good' : 'bad', href: '#retirement',
+    } : null,
+  ].filter(Boolean);
+  return `<div class="hero">
+    <div class="hero-main">${eyebrow}<h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div>
+    <div class="hero-stats">${stats.map((st) => `<${st.href ? `a href="${st.href}"` : 'div'} class="stat${st.tone ? ` stat-${st.tone}` : ''}">
+      <span class="stat-label">${st.label}</span><b class="stat-value">${st.value}</b><span class="stat-sub">${st.sub}</span></${st.href ? 'a' : 'div'}>`).join('')}</div>
+  </div>`;
 }
 
 function shareText(r) {
@@ -667,7 +688,7 @@ function tile(g, r, base) {
   const style = `style="--goal: var(--series-${g.slot + 1})"`;
   if (!r.reached) {
     return `<article class="tile out" ${style}>
-      <div class="tile-head"><span class="swatch"></span><span class="tile-name">${esc(g.name)}</span><span class="pill pill-bad">Out of reach</span></div>
+      <div class="tile-head"><span class="goal-icon">${goalIcon(g.kind)}</span><span class="tile-name">${esc(g.name)}</span><span class="pill pill-bad">Out of reach</span></div>
       <p class="tile-reason">${esc(r.reason)}</p>
       <dl><dt>Price today</dt><dd>${money(evaluate(g.tree).today)}</dd></dl>
     </article>`;
@@ -695,7 +716,7 @@ function tile(g, r, base) {
     ? `<p class="tile-note">The loan is capped by pay (instalments ≤ ${state.assumptions.maxDebtToIncomePct}%), so a bigger down payment is saved first.</p>`
     : '';
   return `<article class="tile" ${style}>
-    <div class="tile-head"><span class="swatch"></span><span class="tile-name">${esc(g.name)}</span>${delta}</div>
+    <div class="tile-head"><span class="goal-icon">${goalIcon(g.kind)}</span><span class="tile-name">${esc(g.name)}</span>${delta}</div>
     <div class="tile-big">${r.month === 0 ? 'Now' : `in ${duration(r.month)}`}</div>
     <div class="tile-date">${monthYear(r.date)}${r.savingMonths && r.savingFrom ? ` · after ${duration(r.savingMonths)} saving for it` : ''}</div>
     <dl>
@@ -729,7 +750,7 @@ function breakdown(g, r) {
   const when = r.reached ? monthYear(r.date) : 'at end of plan';
   const running = g.running ? evaluate(g.running) : null;
   return `<section class="card breakdown" style="--goal: var(--series-${g.slot + 1})">
-    <h3><span class="swatch"></span>${esc(g.name)}: what it costs</h3>
+    <h3><span class="goal-icon">${goalIcon(g.kind)}</span>${esc(g.name)}: what it costs</h3>
     ${g.warnings.length ? `<ul class="warnings">${g.warnings.map((w) => `<li><span class="warn-icon" aria-hidden="true">!</span>${esc(w)}</li>`).join('')}</ul>` : ''}
     <div class="tree">
       <div class="row head"><span class="name">Item</span><span class="num">Today</span><span class="num then">${esc(r.reached ? `In ${when}` : 'At end of plan')}</span></div>
