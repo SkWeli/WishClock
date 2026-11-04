@@ -548,3 +548,18 @@ select:focus-visible, .month-input:focus-visible { outline: none; border-color: 
   .hero-stats { grid-template-columns: 1fr 1fr; }
   .hero-stats .stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
+
+/* ---------- Theme switch ---------- */
+.theme-switch {
+  display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; box-shadow: var(--shadow-sm); align-items: center;
+}
+.theme-switch button {
+  width: 32px; height: 30px; display: grid; place-items: center; border: 0; background: transparent;
+  color: var(--muted); border-radius: 999px; cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.theme-switch button:hover { color: var(--ink); }
+.theme-switch button[aria-checked="true"] { background: var(--accent-soft); color: var(--accent); }
+html { transition: none; }
+body, .card, .tile, .goal, .hero { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
+@media (max-width: 420px) { .ghost-btn .long { display: none; } .head-btns { gap: 6px; } .theme-switch button { width: 30px; } }

@@ -9,6 +9,7 @@ import { money, duration, monthYear, qtyLabel, esc } from './format.js';
 import { startVisitCounter } from './visits.js';
 import { startTour, hasSeenTour } from './tour.js';
 import { goalIcon, ICONS } from './icons.js';
+import { initThemeSwitch } from './theme.js';
 
 // Bump this when the example plan changes, so everyone starts from the new example.
 const STORAGE_KEY = 'wishclock:v3';
@@ -775,3 +776,4 @@ showTab();
 startVisitCounter($('#visits'));
 $('#tour-btn').addEventListener('click', startTour);
 if (!hasSeenTour()) setTimeout(startTour, 300);
+initThemeSwitch($('#theme-switch'));

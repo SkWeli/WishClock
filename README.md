@@ -49,6 +49,10 @@ gh repo create wishclock --public --source=. --push
 
 Every `git push` to `main` updates the site.
 
+## Light and dark mode
+
+The sun / moon / screen switch in the header picks **Light**, **Dark** or **Auto**. Auto is the default and follows the device's setting. The choice is saved in the browser (`wishclock:theme`) and applied by a small script in `<head>` before the page draws, so it never flashes the wrong colours. All colours are CSS variables at the top of `css/styles.css`.
+
 ## First-visit tour
 
 First-time visitors see a short tour of 6 centred cards: what the site does, then People & income, Goals, Your plan and Retirement. The page switches to each tab in the background as the card explains it.
