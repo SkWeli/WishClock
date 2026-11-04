@@ -9,7 +9,8 @@ import { money, duration, monthYear, qtyLabel, esc } from './format.js';
 import { startVisitCounter } from './visits.js';
 import { startTour, hasSeenTour } from './tour.js';
 
-const STORAGE_KEY = 'wishclock:v2';
+// Bump this when the example plan changes, so everyone starts from the new example.
+const STORAGE_KEY = 'wishclock:v3';
 const OLD_KEY = 'wishclock:v1';
 const $ = (sel, root = document) => root.querySelector(sel);
 const startDate = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); };
@@ -55,7 +56,7 @@ const RETIRE_FIELDS = [
   { key: 'withdrawalPct', label: 'Safe withdrawal rate', type: 'number', suffix: '% a year', min: 2, max: 8, step: 0.25, group: '',
     help: '4% means you need 25× your yearly spending.' },
 ];
-const RETIRE_DEFAULTS = { annualExpenses: 1_800_000, hasPension: false, guaranteedIncome: 600_000, lumpSums: 3_000_000, withdrawalPct: 4 };
+const RETIRE_DEFAULTS = { annualExpenses: 840_000, hasPension: false, guaranteedIncome: 600_000, lumpSums: 3_000_000, withdrawalPct: 4 };
 const PERSON_DEFAULTS = { status: 'permanent', pay: 150_000, payAfter: 150_000, expenses: 60_000, expensesAfter: 60_000, savings: 0, buffer: 100_000, age: 28, retireAge: 60 };
 
 const ASSUMPTION_FIELDS = [
@@ -82,8 +83,7 @@ function defaultState() {
   const e = PRICES.economy;
   return {
     people: [
-      { id: 'p1', name: 'You', status: 'intern', pay: 45_000, changeAt: ym(addMonths(startDate(), 8)), payAfter: 180_000, expenses: 25_000, expensesAfter: 70_000, savings: 150_000, buffer: 150_000, age: 24, retireAge: 60 },
-      { id: 'p2', name: 'Partner', status: 'permanent', pay: 220_000, payAfter: 220_000, changeAt: ym(startDate()), expenses: 90_000, expensesAfter: 90_000, savings: 850_000, buffer: 300_000, age: 27, retireAge: 60 },
+      { id: 'p1', name: 'You', status: 'intern', pay: 50_000, changeAt: ym(addMonths(startDate(), 8)), payAfter: 300_000, expenses: 30_000, expensesAfter: 110_000, savings: 300_000, buffer: 150_000, age: 24, retireAge: 55 },
     ],
     retirement: { ...RETIRE_DEFAULTS },
     allowLoans: true,
@@ -588,7 +588,7 @@ function retirementHtml(c, rm) {
   }
   const warn = [
     ...c.loansAfter.map((g) => `${esc(g.name)} loan is still being repaid after you retire (until ${monthYear(addMonths(startDate(), g.ownedOutrightMonth))}).`),
-    ...c.goalsAfter.map((g) => `${esc(g.name)} is bought after you retire.`),
+    ...c.goalsAfter.map((g) => `${esc(g.name)} happens after you retire.`),
   ];
   return `<div class="retire-status"><span class="pill ${ok ? 'pill-good' : 'pill-bad'}">${ok ? 'On track' : 'Short'}</span>
       <h3>${ok ? `Ready to retire in ${date}` : `${money(c.shortfall)} short by ${date}`}</h3></div>
@@ -735,7 +735,7 @@ function breakdown(g, r) {
       <div class="row head"><span class="name">Item</span><span class="num">Today</span><span class="num then">${esc(r.reached ? `In ${when}` : 'At end of plan')}</span></div>
       ${treeHtml(r.priced)}
     </div>
-    ${running ? `<h4>Every month after you buy it</h4><div class="tree small">
+    ${running ? `<h4>Every month after you get it</h4><div class="tree small">
       <div class="row head"><span class="name">Item</span><span class="num">Today</span></div>
       ${running.children.map((c) => treeHtml(c, 1)).join('')}
       <div class="row total"><span class="name">Net change to the monthly budget</span><span class="num">${money(running.today)}</span></div>

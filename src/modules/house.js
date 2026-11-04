@@ -10,6 +10,7 @@ const sizeOptions = (sizes) => sizes.map((s) => ({ value: s, label: s[0].toUpper
 export const house = {
   kind: 'house',
   label: 'House',
+  verb: 'Buy',
   fields: [
     { key: 'location', label: 'Location', type: 'select', group: 'The house', options: Object.entries(P.locations).map(([value, l]) => ({ value, label: l.label })) },
     { key: 'buyLand', label: 'I need to buy land', type: 'toggle', group: 'The house' },

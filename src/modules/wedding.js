@@ -78,6 +78,7 @@ const lowerTier = { grand: 'standard', standard: 'simple', simple: 'simple' };
 export const wedding = {
   kind: 'wedding',
   label: 'Wedding',
+  verb: 'Have',
   fields: [
     { key: 'guests', label: 'Guests', type: 'number', min: 10, max: 2000, step: 10, group: 'Wedding day' },
     { key: 'venue', label: 'Venue', type: 'select', group: 'Wedding day', options: Object.entries(W.venues).map(([value, v]) => ({ value, label: `${v.label} (up to ${v.capacity})` })) },

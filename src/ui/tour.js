@@ -17,7 +17,7 @@ const STEPS = [
   { tab: 'goals', icon: '🏠', title: '2. Add your goals, in order',
     body: 'Add a house, car or wedding, then tap <strong>Edit</strong> to set details: floors, furniture, guests, venue. Start from a preset if you’re unsure. Choose loans or cash only at the top.' },
   { tab: 'plan', icon: '📈', title: '3. See your plan',
-    body: 'Each goal shows <strong>how long until you can buy it</strong>. The timeline shows your savings growing and dropping as you buy. Try the <strong>“What if you saved more?”</strong> slider.' },
+    body: 'Each goal shows <strong>how long until you can buy it</strong>. The timeline shows your savings growing, then dropping as each goal happens. Try the <strong>“What if you saved more?”</strong> slider.' },
   { tab: 'retirement', icon: '🌴', title: '4. Check retirement',
     body: 'See how much you need saved to retire, and the age you could <strong>really</strong> retire at the rate you’re going.' },
   { tab: 'plan', icon: '✅', title: 'You’re ready',

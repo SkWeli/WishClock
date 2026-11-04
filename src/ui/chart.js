@@ -144,7 +144,7 @@ export function renderTimeline(container, result, goals, { payChanges = [], reti
   payChanges.forEach((c) => events.set(c.month, [...(events.get(c.month) || []), c.label]));
   result.goals.forEach((r, i) => {
     if (!r.reached) return;
-    events.set(r.month, [...(events.get(r.month) || []), `Buy ${goals[i].name}`]);
+    events.set(r.month, [...(events.get(r.month) || []), `${goals[i].verb || 'Buy'} ${goals[i].name}`]);
     if (r.ownedOutrightMonth > r.month) events.set(r.ownedOutrightMonth, [...(events.get(r.ownedOutrightMonth) || []), `${goals[i].name} loan paid off`]);
   });
 

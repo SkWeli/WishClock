@@ -18,6 +18,7 @@ export function usedValueFactor(ageYears, mileageKm) {
 export const car = {
   kind: 'car',
   label: 'Car',
+  verb: 'Buy',
   fields: [
     { key: 'carClass', label: 'Type of car', type: 'select', group: 'The car', options: Object.entries(C.classes).map(([value, c]) => ({ value, label: c.label })) },
     { key: 'condition', label: 'Condition', type: 'select', group: 'The car', options: [

@@ -13,6 +13,7 @@ export function buildGoal(goal) {
   const built = mod.build(options);
   return {
     ...goal,
+    verb: mod.verb || 'Buy',
     options,
     tree: prune(built.tree) ?? { label: goal.name, children: [] },
     running: built.running ? prune(built.running) : null,
