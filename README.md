@@ -49,6 +49,12 @@ gh repo create wishclock --public --source=. --push
 
 Every `git push` to `main` updates the site.
 
+## First-visit tour
+
+First-time visitors see a short tour of 6 centred cards: what the site does, then People & income, Goals, Your plan and Retirement. The page switches to each tab in the background as the card explains it.
+
+A visitor counts as new if their browser has no `wishclock:tour-seen` flag in `localStorage`. The flag is saved when they finish or skip the tour, so the tour isn't shown again on that browser. Another browser, another device or cleared browser data count as a first visit again. The **How it works** button in the header replays the tour any time. Edit the cards in `src/ui/tour.js`.
+
 ## Visitor counter
 
 The footer can show how many times the site has been visited, using [GoatCounter](https://www.goatcounter.com). It's free, needs no cookies or consent banner, and gives you a dashboard of visits, countries, devices and where visitors came from.

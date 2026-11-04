@@ -7,6 +7,7 @@ import { fieldsHtml, readField, clampField, visibility } from './form.js';
 import { renderTimeline, yearlyTable, renderRetirementChart } from './chart.js';
 import { money, duration, monthYear, qtyLabel, esc } from './format.js';
 import { startVisitCounter } from './visits.js';
+import { startTour, hasSeenTour } from './tour.js';
 
 const STORAGE_KEY = 'wishclock:v2';
 const OLD_KEY = 'wishclock:v1';
@@ -751,3 +752,5 @@ renderGoals();
 renderResults();
 showTab();
 startVisitCounter($('#visits'));
+$('#tour-btn').addEventListener('click', startTour);
+if (!hasSeenTour()) setTimeout(startTour, 300);
