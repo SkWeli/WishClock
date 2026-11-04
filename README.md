@@ -49,6 +49,17 @@ gh repo create wishclock --public --source=. --push
 
 Every `git push` to `main` updates the site.
 
+## Visitor counter
+
+The footer can show how many times the site has been visited, using [GoatCounter](https://www.goatcounter.com). It's free, needs no cookies or consent banner, and gives you a dashboard of visits, countries, devices and where visitors came from.
+
+1. Sign up at <https://www.goatcounter.com/signup>. Pick a **code**, for example `wishclock`. Your dashboard will be at `https://wishclock.goatcounter.com`.
+2. In GoatCounter, open **Settings** and tick **Allow adding visitor counts on your website**, then save.
+3. In `src/config.js`, set `goatcounterCode: 'wishclock'` (your code).
+4. Commit and push. Visits are counted on the live GitHub Pages site, and the total appears at the bottom of the page.
+
+Leave the code empty to turn the counter off. Pages opened from your own computer (`file://`) are never counted. Visitors who use ad blockers may not be counted.
+
 ## Run it on your computer
 
 ```bash
@@ -64,6 +75,7 @@ Opening `index.html` by double-clicking won't work, because browsers block ES mo
 
 ```
 src/
+  config.js             site settings (visitor counter code)
   data/prices.js        every price and rate, in one place
   engine/costTree.js    the cost tree: qty × (unit price + children), with per-item price growth
   engine/loan.js        instalment (EMI) maths

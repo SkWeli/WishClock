@@ -430,3 +430,7 @@ select:hover, .input-wrap:hover { border-color: var(--muted); }
 .rc-ages { flex-basis: 100%; font-size: 13px; color: var(--muted); }
 .rc-ages strong { color: var(--ink); }
 .chart .rate-label { fill: var(--good); }
+
+.visits { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; margin-bottom: 10px; }
+.visit-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }

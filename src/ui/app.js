@@ -6,6 +6,7 @@ import { evaluate } from '../engine/costTree.js';
 import { fieldsHtml, readField, clampField, visibility } from './form.js';
 import { renderTimeline, yearlyTable, renderRetirementChart } from './chart.js';
 import { money, duration, monthYear, qtyLabel, esc } from './format.js';
+import { startVisitCounter } from './visits.js';
 
 const STORAGE_KEY = 'wishclock:v2';
 const OLD_KEY = 'wishclock:v1';
@@ -749,3 +750,4 @@ renderPeople();
 renderGoals();
 renderResults();
 showTab();
+startVisitCounter($('#visits'));
