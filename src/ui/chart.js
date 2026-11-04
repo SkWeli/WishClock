@@ -13,7 +13,7 @@ function niceStep(raw) {
  * Timeline: savings balance over time (top), and one lane per goal showing
  * the saving phase, the purchase, and any loan repayment (bottom).
  */
-export function renderTimeline(container, result, goals) {
+export function renderTimeline(container, result, goals, { payChanges = [], retirement = null } = {}) {
   const width = Math.max(320, container.clientWidth);
   const narrow = width < 560;
   const m = { left: narrow ? 52 : 70, right: 14, top: 40 };
@@ -23,11 +23,11 @@ export function renderTimeline(container, result, goals) {
   const laneGap = 10;
   const lanesTop = m.top + plotH + 34;
   const height = lanesTop + goals.length * (laneH + laneGap) + 4;
-  // Show up to 3 years past the last purchase; loans that run longer are clipped with a label.
-  const buys = result.goals.filter((g) => g.reached).map((g) => g.month);
-  const lastBuy = buys.length ? Math.max(...buys) : result.endMonth;
-  const end = Math.max(24, Math.min(result.endMonth, lastBuy + 36));
-  const pts = result.points.filter((p) => p.month <= end);
+  // The whole simulated span: through retirement and on to the timeline's end year.
+  const end = Math.max(24, result.endMonth);
+  // After retiring, savings can't go below zero: once they run out, the line stays at zero.
+  const shown = (p) => (retirement && p.month >= retirement.month ? Math.max(0, p.balance) : p.balance);
+  const pts = result.points.filter((p) => p.month <= end).map((p) => ({ ...p, raw: p.balance, balance: shown(p) }));
 
   // Scales
   const values = pts.map((p) => p.balance);
@@ -48,7 +48,7 @@ export function renderTimeline(container, result, goals) {
   // X ticks: Januaries
   const startMonth = result.startDate.getMonth();
   const years = end / 12;
-  const yStep = [1, 2, 5, 10].find((s) => years / s <= (narrow ? 5 : 9)) ?? 10;
+  const yStep = [1, 2, 5, 10].find((s) => years / s <= (narrow ? 6 : 13)) ?? 10;
   for (let mo = (12 - startMonth) % 12; mo <= end; mo += 12) {
     const yr = addMonths(result.startDate, mo).getFullYear();
     if (yr % yStep !== 0) continue;
@@ -56,11 +56,34 @@ export function renderTimeline(container, result, goals) {
     parts.push(`<text class="tick" x="${x(mo)}" y="${m.top + plotH + 19}" text-anchor="middle">${yr}</text>`);
   }
 
+  // Retirement band
+  if (retirement && retirement.month < end) {
+    const rx = x(retirement.month);
+    parts.push(`<rect class="retire-band" x="${rx}" y="${m.top}" width="${m.left + plotW - rx}" height="${plotH}"/>`);
+    parts.push(`<line class="retire-line" x1="${rx}" x2="${rx}" y1="${m.top}" y2="${m.top + plotH}"/>`);
+    parts.push(`<text class="retire-label" x="${rx + 6}" y="${m.top + plotH - 8}">Retired · ${monthYear(addMonths(result.startDate, retirement.month))}</text>`);
+    if (retirement.runsOut != null) {
+      const ox = x(retirement.runsOut);
+      parts.push(`<line class="runout-line" x1="${ox}" x2="${ox}" y1="${m.top}" y2="${m.top + plotH}"/>`);
+      parts.push(`<text class="runout-label" x="${ox - 6}" y="${m.top + 30}" text-anchor="end">Savings run out · ${monthYear(addMonths(result.startDate, retirement.runsOut))}</text>`);
+    }
+  }
+
   // Balance area + line
   const base = y(Math.max(yMin, 0));
   const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.month).toFixed(1)},${y(p.balance).toFixed(1)}`).join('');
   parts.push(`<path class="balance-area" d="${line}L${x(pts[pts.length - 1].month)},${base}L${x(0)},${base}Z"/>`);
   parts.push(`<path class="balance-line" d="${line}"/>`);
+  if (pts.some((p) => p.reserve > 0)) {
+    const res = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.month).toFixed(1)},${y(p.reserve || 0).toFixed(1)}`).join('');
+    parts.push(`<path class="reserve-line" d="${res}"/>`);
+  }
+
+  // Pay changes (an intern going permanent, a student starting work)
+  payChanges.filter((c) => c.month > 0 && c.month <= end).forEach((c) => {
+    const px = x(c.month), py = m.top + plotH;
+    parts.push(`<path class="pay-mark" d="M${px - 6},${py} L${px + 6},${py} L${px},${py - 9} Z"><title>${esc(c.label)}</title></path>`);
+  });
 
   // Purchase markers
   const reached = goals.map((g, i) => ({ g, r: result.goals[i] })).filter((d) => d.r.reached);
@@ -113,6 +136,12 @@ export function renderTimeline(container, result, goals) {
   const cross = svg.querySelector('.crosshair');
   const dot = svg.querySelector('.crosshair-dot');
   const events = new Map();
+  const people = result.people || [];
+  if (retirement) {
+    events.set(retirement.month, [...(events.get(retirement.month) || []), 'Retire: pay stops, lump sums paid']);
+    if (retirement.runsOut != null) events.set(retirement.runsOut, [...(events.get(retirement.runsOut) || []), 'Savings run out']);
+  }
+  payChanges.forEach((c) => events.set(c.month, [...(events.get(c.month) || []), c.label]));
   result.goals.forEach((r, i) => {
     if (!r.reached) return;
     events.set(r.month, [...(events.get(r.month) || []), `Buy ${goals[i].name}`]);
@@ -133,7 +162,9 @@ export function renderTimeline(container, result, goals) {
       <strong>${monthYear(addMonths(result.startDate, p.month))}</strong>
       ${ev ? `<div class="tip-event">${ev.map(esc).join('<br>')}</div>` : ''}
       <dl>
-        <dt>Savings</dt><dd>${money(p.balance)}</dd>
+        <dt>Savings${people.length > 1 ? ' together' : ''}</dt><dd>${p.raw < 0 && p.balance === 0 ? 'Run out' : money(p.balance)}</dd>
+        ${people.length > 1 ? people.map((pp, i) => `<dt class="indent">${esc(pp.name)}</dt><dd class="light">${money(p.balances[i])}</dd>`).join('') : ''}
+        ${p.reserve ? `<dt>Emergency money</dt><dd class="light">${money(p.reserve)}</dd>` : ''}
         <dt>Take-home pay</dt><dd>${money(p.income, { short: true })}</dd>
         <dt>Living costs</dt><dd>${money(p.expenses, { short: true })}</dd>
         ${p.loanPayments ? `<dt>Loan instalments</dt><dd>${money(p.loanPayments, { short: true })}</dd>` : ''}
@@ -159,4 +190,64 @@ export function yearlyTable(result) {
   return `<table class="yearly"><thead><tr><th>Date</th><th>Savings</th><th>Pay / month</th><th>Living costs</th><th>Loans / month</th><th>Saved / month</th></tr></thead><tbody>
     ${rows.map((p) => `<tr><td>${monthYear(addMonths(result.startDate, p.month))}</td><td>${money(p.balance)}</td><td>${money(p.income, { short: true })}</td><td>${money(p.expenses, { short: true })}</td><td>${p.loanPayments ? money(p.loanPayments, { short: true }) : '—'}</td><td>${money(p.surplus, { short: true })}</td></tr>`).join('')}
   </tbody></table>`;
+}
+
+/** Retirement view: usable savings vs the target for retiring in that month. */
+export function renderRetirementChart(container, check, retirement, inflationPct, people) {
+  const width = Math.max(320, container.clientWidth);
+  const narrow = width < 560;
+  const m = { left: narrow ? 52 : 70, right: 16, top: 24, bottom: 30 };
+  const plotW = width - m.left - m.right;
+  const plotH = narrow ? 200 : 260;
+  const height = m.top + plotH + m.bottom;
+  // Savings if everyone keeps working, shown far enough to include both the planned date and "at this rate".
+  const end = Math.min(check.horizon, Math.max(check.retireMonth, check.earliestMonth ?? check.horizon) + 24);
+  const pts = check.working.points.filter((p) => p.month < end);
+  const fac = (mo) => Math.pow(1 + inflationPct / 100, mo / 12);
+  const rate = (retirement.withdrawalPct || 4) / 100;
+  const needAt = (mo) => Math.max(0, (Math.max(0, retirement.annualExpenses - (retirement.hasPension ? retirement.guaranteedIncome : 0)) / rate - (retirement.lumpSums || 0)) * fac(mo));
+  const usable = pts.map((p) => p.balance - p.reserve);
+  let yMin = Math.min(0, ...usable);
+  let yMax = Math.max(1, ...usable, needAt(end));
+  const step = niceStep((yMax - yMin) / 4);
+  yMin = Math.floor(yMin / step) * step;
+  yMax = Math.ceil(yMax / step) * step;
+  const x = (mo) => m.left + (mo / end) * plotW;
+  const y = (v) => m.top + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+  const parts = [];
+  for (let v = yMin; v <= yMax + 1; v += step) {
+    parts.push(`<line class="grid${v === 0 ? ' zero' : ''}" x1="${m.left}" x2="${m.left + plotW}" y1="${y(v)}" y2="${y(v)}"/>`);
+    parts.push(`<text class="tick" x="${m.left - 8}" y="${y(v) + 4}" text-anchor="end">${axisMoney(v)}</text>`);
+  }
+  const years = end / 12;
+  const yStep = [1, 2, 5, 10].find((s) => years / s <= (narrow ? 5 : 9)) ?? 10;
+  const startMonth = check.result.startDate.getMonth();
+  for (let mo = (12 - startMonth) % 12; mo <= end; mo += 12) {
+    const yr = addMonths(check.result.startDate, mo).getFullYear();
+    if (yr % yStep !== 0) continue;
+    parts.push(`<text class="tick" x="${x(mo)}" y="${m.top + plotH + 19}" text-anchor="middle">${yr}</text>`);
+  }
+  const need = [];
+  for (let mo = 0; mo <= end; mo += Math.max(1, Math.floor(end / 200))) need.push(`${need.length ? 'L' : 'M'}${x(mo).toFixed(1)},${y(needAt(mo)).toFixed(1)}`);
+  need.push(`L${x(end).toFixed(1)},${y(needAt(end)).toFixed(1)}`);
+  parts.push(`<path class="target-line" d="${need.join('')}"/>`);
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.month + 1).toFixed(1)},${y(usable[i]).toFixed(1)}`).join('');
+  parts.push(`<path class="balance-line" d="${line}"/>`);
+  const start = check.result.startDate;
+  const px = x(check.retireMonth);
+  parts.push(`<line class="marker" style="stroke:var(--muted)" x1="${px}" x2="${px}" y1="${m.top}" y2="${m.top + plotH}"/>`);
+  parts.push(`<circle cx="${px}" cy="${y(needAt(check.retireMonth))}" r="5" class="target-dot"/>`);
+  const early = check.earliestMonth != null && check.earliestMonth < check.retireMonth;
+  // Put each label on whichever side of its line has room.
+  const side = (lx) => (lx > m.left + plotW - 150 ? ['end', -6] : ['start', 6]);
+  const [pa, pd] = side(px);
+  parts.push(`<text class="marker-label" x="${px + pd}" y="${m.top - 8}" text-anchor="${pa}">Planned · ${monthYear(addMonths(start, check.retireMonth))}</text>`);
+  if (check.earliestMonth != null && check.earliestMonth <= end) {
+    const ex = x(check.earliestMonth);
+    parts.push(`<line class="marker" style="stroke:var(--good)" x1="${ex}" x2="${ex}" y1="${m.top}" y2="${m.top + plotH}"/>`);
+    parts.push(`<circle cx="${ex}" cy="${y(needAt(check.earliestMonth))}" r="5.5" class="end-ok"/>`);
+    const [ra, rd] = early ? ['end', -6] : side(ex);
+    parts.push(`<text class="marker-label rate-label" x="${ex + rd}" y="${m.top + 12}" text-anchor="${ra}">At this rate · ${monthYear(addMonths(start, check.earliestMonth))}</text>`);
+  }
+  container.innerHTML = `<svg xmlns="${NS}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Savings compared with the retirement target until ${monthYear(addMonths(check.result.startDate, end))}">${parts.join('')}</svg>`;
 }

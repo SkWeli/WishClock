@@ -1,8 +1,9 @@
 import { esc } from './format.js';
 
 /** Render one field from a module's schema. */
-export function fieldHtml(field, value, prefix) {
+export function fieldHtml(field, value, prefix, values = {}) {
   const id = `${prefix}-${field.key}`;
+  field = { ...field, label: typeof field.label === 'function' ? field.label(values) : field.label };
   const help = field.help ? `<small class="help">${esc(field.help)}</small>` : '';
   if (field.type === 'toggle') {
     return `<div class="field field-toggle">
@@ -16,6 +17,10 @@ export function fieldHtml(field, value, prefix) {
     const opts = field.options.map((o) => `<option value="${esc(o.value)}" ${String(o.value) === String(value) ? 'selected' : ''}>${esc(o.label)}</option>`).join('');
     return `<div class="field"><label for="${id}">${esc(field.label)}</label>
       <select id="${id}" data-key="${field.key}">${opts}</select>${help}</div>`;
+  }
+  if (field.type === 'month') {
+    return `<div class="field"><label for="${id}">${esc(field.label)}</label>
+      <input type="month" class="month-input" id="${id}" data-key="${field.key}" value="${esc(value)}">${help}</div>`;
   }
   const money = field.type === 'money';
   return `<div class="field"><label for="${id}">${esc(field.label)}</label>
@@ -34,7 +39,7 @@ export function fieldsHtml(fields, values, prefix) {
     if (f.showIf && !f.showIf(values)) continue;
     const g = f.group ?? 'Details';
     if (!groups.has(g)) groups.set(g, []);
-    groups.get(g).push(fieldHtml(f, values[f.key], prefix));
+    groups.get(g).push(fieldHtml(f, values[f.key], prefix, values));
   }
   return [...groups].map(([legend, html]) => `<fieldset>${legend ? `<legend>${esc(legend)}</legend>` : ''}<div class="fields">${html.join('')}</div></fieldset>`).join('');
 }
@@ -42,6 +47,7 @@ export function fieldsHtml(fields, values, prefix) {
 /** Read a value back from an input, keeping the schema's type. */
 export function readField(field, el) {
   if (field.type === 'toggle') return el.checked;
+  if (field.type === 'month') return el.value;
   if (field.type === 'select') {
     const isNum = typeof field.options[0].value === 'number';
     return isNum ? Number(el.value) : el.value;

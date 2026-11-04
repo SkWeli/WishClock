@@ -40,7 +40,7 @@ export const house = {
     { key: 'appliances', label: 'Fridge, washing machine, cooker, microwave', type: 'toggle', group: 'Furniture & appliances', showIf: (o) => o.furnished },
 
     { key: 'financing', label: 'Pay with', type: 'select', group: 'Paying for it', options: [
-      { value: 'loan', label: 'Housing loan' }, { value: 'cash', label: 'Cash only' },
+      { value: 'loan', label: 'Housing loan' }, { value: 'cash', label: 'Cash only, no loan' },
     ] },
     { key: 'downPct', label: 'Down payment', type: 'number', suffix: '%', min: 10, max: 90, step: 5, group: 'Paying for it', showIf: (o) => o.financing === 'loan', help: 'Banks usually lend up to 70–80% of land + building' },
     { key: 'ratePct', label: 'Loan interest', type: 'number', suffix: '% a year', min: 5, max: 25, step: 0.25, group: 'Paying for it', showIf: (o) => o.financing === 'loan' },

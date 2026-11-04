@@ -22,41 +22,35 @@
     <button type="button" id="reset" class="ghost-btn">Reset to example</button>
   </header>
 
-  <main class="layout">
-    <aside class="inputs">
-      <section class="card" aria-labelledby="money-h">
-        <h2 id="money-h" class="card-h">Your money</h2>
-        <div id="profile-fields"></div>
-      </section>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <a href="#plan" role="tab" id="tab-plan" aria-controls="panel-plan" class="tab"><span class="tab-n">1</span>Your plan</a>
+    <a href="#people" role="tab" id="tab-people" aria-controls="panel-people" class="tab"><span class="tab-n">2</span>People &amp; income <span class="badge" id="people-count"></span></a>
+    <a href="#goals" role="tab" id="tab-goals" aria-controls="panel-goals" class="tab"><span class="tab-n">3</span>Goals <span class="badge" id="goal-count"></span></a>
+    <a href="#retirement" role="tab" id="tab-retirement" aria-controls="panel-retirement" class="tab"><span class="tab-n">4</span>Retirement</a>
+    <a href="#costs" role="tab" id="tab-costs" aria-controls="panel-costs" class="tab"><span class="tab-n">5</span>Cost breakdown</a>
+  </nav>
 
-      <section class="card" aria-labelledby="goals-h">
-        <div class="card-h-row">
-          <h2 id="goals-h" class="card-h">Your goals, in order</h2>
-        </div>
-        <p class="card-intro">You save for one goal at a time, top to bottom. Use the arrows to change the order.</p>
-        <div id="goal-list"></div>
-        <div class="add-row">
-          <span>Add</span>
-          <button type="button" class="add-btn" data-add="house">House</button>
-          <button type="button" class="add-btn" data-add="car">Car</button>
-          <button type="button" class="add-btn" data-add="wedding">Wedding</button>
-        </div>
-      </section>
-    </aside>
+  <div id="strip" class="strip" aria-live="polite"></div>
 
-    <section class="results" aria-live="polite">
+  <main>
+    <!-- 1. Plan -->
+    <section id="panel-plan" class="panel" role="tabpanel" aria-labelledby="tab-plan">
       <div id="headline" class="headline"></div>
       <div id="summary" class="tiles"></div>
+      <div id="retire-card"></div>
 
       <section class="card" aria-labelledby="tl-h">
         <h2 id="tl-h" class="card-h">Timeline</h2>
-        <p class="card-intro">Savings grow, drop when you buy, then grow again. Bars show time spent saving (light) and repaying a loan (solid).</p>
+        <p class="card-intro">From today to 2070, or further if a goal, loan or retirement comes later. Savings grow, drop when you buy, then grow again until retirement, when you start living off them. Bars show time spent saving (light) and repaying a loan (solid).</p>
         <div id="chart" class="chart"></div>
         <div class="legend" aria-hidden="true">
           <span><i class="lg-line"></i>Savings balance</span>
           <span><i class="lg-saving"></i>Saving for the goal</span>
           <span><i class="lg-loan"></i>Repaying a loan</span>
           <span><i class="lg-dot"></i>Bought</span>
+          <span><i class="lg-pay"></i>Pay change</span>
+          <span><i class="lg-reserve"></i>Emergency money kept</span>
+          <span><i class="lg-retire"></i>Retired</span>
         </div>
         <details class="yearly-wrap">
           <summary>Year-by-year numbers</summary>
@@ -72,14 +66,99 @@
         </div>
         <p id="whatif-result" class="whatif-result"></p>
       </section>
-
-      <div id="breakdowns" class="breakdowns"></div>
-
-      <footer class="foot">
-        <p id="asof"></p>
-        <p>Each month the plan adds your pay (raised once a year), takes away living costs (rising with inflation), loan instalments and running costs, and adds interest on savings. When there is enough cash for the next goal at that month’s price, you buy it.</p>
-      </footer>
     </section>
+
+    <!-- 2. People -->
+    <section id="panel-people" class="panel narrow" role="tabpanel" aria-labelledby="tab-people" hidden>
+      <div class="panel-head">
+        <h2>Who is saving?</h2>
+        <p>Add everyone whose money goes into these goals, like you and your partner. Each person keeps their own savings. A shared goal uses everyone’s savings, and its loan instalments are split by income.</p>
+      </div>
+      <div class="count-row">
+        <span id="count-label">People saving together</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="count-label" id="people-count-picker">
+          <button type="button" role="radio" data-count="1">1</button>
+          <button type="button" role="radio" data-count="2">2</button>
+          <button type="button" role="radio" data-count="3">3</button>
+          <button type="button" role="radio" data-count="4">4</button>
+        </div>
+      </div>
+      <div id="people-list" class="people"></div>
+
+      <section class="card" aria-labelledby="as-h">
+        <h2 id="as-h" class="card-h">Assumptions</h2>
+        <p class="card-intro">These apply to everyone. The defaults match Sri Lanka in late 2026.</p>
+        <div id="assumption-fields"></div>
+      </section>
+      <div class="next-row"><a class="next-btn" href="#goals">Next: your goals →</a></div>
+    </section>
+
+    <!-- 3. Goals -->
+    <section id="panel-goals" class="panel narrow" role="tabpanel" aria-labelledby="tab-goals" hidden>
+      <div class="panel-head">
+        <h2>Your goals, in order</h2>
+        <p>You save for one goal at a time, top to bottom. Use the arrows to change the order. Open a goal to set every detail, or start from a preset.</p>
+      </div>
+      <div class="loan-choice card">
+        <div class="count-row">
+          <span id="loan-label">Loans</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="loan-label" id="loan-picker">
+            <button type="button" role="radio" data-loans="true">Use loans where they help</button>
+            <button type="button" role="radio" data-loans="false">No loans, cash only</button>
+          </div>
+        </div>
+        <p id="loan-note" class="card-intro loan-note"></p>
+      </div>
+      <div id="goal-list"></div>
+      <div class="add-row">
+        <span>Add</span>
+        <button type="button" class="add-btn" data-add="house">House</button>
+        <button type="button" class="add-btn" data-add="car">Car</button>
+        <button type="button" class="add-btn" data-add="wedding">Wedding</button>
+      </div>
+      <div class="next-row"><a class="next-btn" href="#plan">See your plan →</a></div>
+    </section>
+
+    <!-- 4. Retirement -->
+    <section id="panel-retirement" class="panel narrow" role="tabpanel" aria-labelledby="tab-retirement" hidden>
+      <div class="panel-head">
+        <h2>Retirement</h2>
+        <p>How much you need saved on the day you stop working, and whether your plan gets you there after buying your goals. Your emergency money is not counted.</p>
+      </div>
+      <div class="retire-grid">
+        <section class="card" aria-labelledby="rs-h">
+          <h2 id="rs-h" class="card-h">Your retirement</h2>
+          <div id="retire-fields"></div>
+          <h3 class="mini-h">When</h3>
+          <ul id="retire-ages" class="ages"></ul>
+          <a class="text-link" href="#people">Change ages in People &amp; income →</a>
+        </section>
+        <section class="card retire-result" id="retire-result" aria-live="polite"></section>
+      </div>
+      <section class="card" aria-labelledby="rc-h">
+        <h2 id="rc-h" class="card-h">Savings vs what you need</h2>
+        <p class="card-intro">The target line rises with inflation. Where your savings line first crosses above it is the age you could retire at this rate.</p>
+        <div id="retire-chart" class="chart"></div>
+        <div class="legend" aria-hidden="true">
+          <span><i class="lg-line"></i>Savings if you keep working (emergency money excluded)</span>
+          <span><i class="lg-target"></i>Needed if you retired that month</span>
+        </div>
+      </section>
+    </section>
+
+    <!-- 5. Costs -->
+    <section id="panel-costs" class="panel narrow" role="tabpanel" aria-labelledby="tab-costs" hidden>
+      <div class="panel-head">
+        <h2>What everything costs</h2>
+        <p>Every item, with today’s price and the price on the day you buy it. Open a row to see what’s inside.</p>
+      </div>
+      <div id="breakdowns" class="breakdowns"></div>
+    </section>
+
+    <footer class="foot">
+      <p id="asof"></p>
+      <p>Each month the plan adds everyone’s pay (an intern’s allowance until they go permanent, then yearly raises), takes away living costs (rising with inflation), loan instalments and running costs, and adds interest on savings. When the people paying for the next goal have enough saved for that month’s price, they buy it.</p>
+    </footer>
   </main>
 
   <script type="module" src="src/ui/app.js"></script>

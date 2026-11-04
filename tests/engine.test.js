@@ -89,5 +89,5 @@ test('simulation: debt-to-income cap forces a bigger down payment', () => {
 test('simulation: unreachable goals are explained', () => {
   const r = simulate({ ...profile, monthlyExpenses: 120_000 }, [{ id: 'x', name: 'X', tree: item('X', 1, 1_000_000), financing: { type: 'cash' } }], { startDate: start, maxYears: 5 });
   assert.equal(r.goals[0].reached, false);
-  assert.match(r.goals[0].reason, /exceed your income/);
+  assert.match(r.goals[0].reason, /exceed income/);
 });

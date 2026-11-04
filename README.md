@@ -68,11 +68,12 @@ src/
   engine/costTree.js    the cost tree: qty × (unit price + children), with per-item price growth
   engine/loan.js        instalment (EMI) maths
   engine/simulate.js    the month-by-month simulation
+  engine/retirement.js  25× / income-gap retirement target and plan check
   modules/house.js      options → cost tree for a house
   modules/car.js        … for a car (new or used, with depreciation)
   modules/wedding.js    … for a wedding (venue rules, alcohol, homecoming)
   modules/index.js      the list of goal types
-  ui/                   form rendering, timeline chart, app wiring
+  ui/                   tabs (Plan, People & income, Goals, Retirement, Cost breakdown), forms, chart
 tests/                  node:test unit tests
 ```
 
@@ -101,10 +102,37 @@ House in Gampaha district
 
 Each month:
 
-1. If your savings cover the next goal at **that month's price**, you buy it. You pay cash, or the down payment if you take a loan. Its running costs (fuel, servicing, maintenance, or rent you no longer pay) join your monthly budget.
-2. Your pay is added. It rises once a year. Living costs are taken away and rise with inflation every month. Loan instalments and running costs are taken away too. Interest is added on your savings.
+1. If the payers' savings cover the next goal at **that month's price**, you buy it. You pay cash, or the down payment if you take a loan. Its running costs (fuel, servicing, maintenance, or rent you no longer pay) join your monthly budget.
+2. Each person's pay is added. Permanent pay rises once a year; intern pay stays flat until the permanent job starts. Living costs are taken away and rise with inflation every month. Loan instalments and running costs are taken away too. Interest is added on your savings.
 
 Loans are capped so that all your instalments together stay under the share of pay that banks allow (40% by default). If the loan you asked for is too big, you keep saving until the down payment covers the difference. You save for goals in the order you list them.
+
+### People and pay
+
+Add 1 to 4 people who save together, like you and a partner. Each person has:
+
+- **Work status:** permanent, intern / trainee, or studying. Interns and students have a current allowance, the month the permanent job starts, and the expected pay from then. Pay stays flat until that month. Yearly raises then start from the permanent salary, so a low intern salary doesn't drag down the whole forecast.
+- **Living costs now, and after the new job starts.** Family support often stops once an intern goes permanent, so costs can change on the same date as pay.
+- **Their own savings pot**, plus **emergency money** that is never spent on a goal. A purchase only happens if everyone still has their emergency money afterwards. It grows with inflation.
+- **Age and retirement age.** Pay stops at retirement.
+
+Each goal has a **Who pays** setting: together, or only one person. A shared goal uses everyone's savings, taking from each pot in proportion to its size. Its loan instalments and running costs are split by income, and the bank's loan limit is based on the payers' combined income. A personal goal uses only that person's money.
+
+### Loans are optional
+
+At the top of the Goals tab, choose **Use loans where they help** or **No loans, cash only**. With no loans, every goal is paid fully from savings and the loan fields are hidden. With loans allowed, each house or car can still be set to *Cash only, no loan* on its own.
+
+### Retirement
+
+The Retirement tab works out how much you need saved on the day you stop working:
+
+- **No pension (25× rule):** yearly spending in retirement × 25, which means a 4% safe withdrawal rate. Rs 600,000 a year needs Rs 15,000,000.
+- **With a pension or other guaranteed income (income-gap method):** (yearly spending − guaranteed income) ÷ 4%.
+- Lump sums such as EPF, ETF and gratuity are subtracted. Every amount is entered in today's rupees and grown with inflation to the retirement date.
+
+It compares that target with the savings your plan projects for that date, after all goals are bought and with emergency money excluded. If you're short, it finds the extra monthly saving that closes the gap. For each person it shows the age they **plan** to retire at next to the age they could retire **at this rate**: the first month, after every goal is bought, when savings already cover the target for retiring then, if everyone keeps working. That age can be earlier or later than planned. It also warns about loans still running after retirement.
+
+The main timeline runs from today to at least 2070. It stretches further when a goal, a loan or retirement comes later, showing 5 years past retirement. At retirement, pay stops, the lump sums are paid out, and spending switches to your retirement spending minus any guaranteed income. The timeline then shows savings being drawn down, and marks the month they run out if that happens.
 
 ### Realism built in
 

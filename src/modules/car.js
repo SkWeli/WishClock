@@ -28,7 +28,7 @@ export const car = {
     { key: 'kmPerMonth', label: 'You drive', type: 'number', suffix: 'km a month', min: 100, max: 8_000, step: 100, group: 'The car' },
 
     { key: 'financing', label: 'Pay with', type: 'select', group: 'Paying for it', options: [
-      { value: 'loan', label: 'Leasing' }, { value: 'cash', label: 'Cash only' },
+      { value: 'loan', label: 'Leasing' }, { value: 'cash', label: 'Cash only, no loan' },
     ] },
     { key: 'downPct', label: 'Down payment', type: 'number', suffix: '%', min: 10, max: 90, step: 5, group: 'Paying for it', showIf: (o) => o.financing === 'loan', help: 'Leasing limits mean you often pay 40–50% upfront' },
     { key: 'ratePct', label: 'Leasing interest', type: 'number', suffix: '% a year', min: 5, max: 30, step: 0.25, group: 'Paying for it', showIf: (o) => o.financing === 'loan' },
