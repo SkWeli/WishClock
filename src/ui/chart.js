@@ -111,6 +111,10 @@ export function renderTimeline(container, result, goals, { payChanges = [], reti
       parts.push(`<text class="lane-note" x="${m.left + plotW - 6}" y="${ly + laneH / 2 + 4}" text-anchor="end">Out of reach</text>`);
       return;
     }
+    if (g.kind === 'rent') {
+      const a1 = x(Math.min(end, r.endedMonth ?? end));
+      parts.push(`<rect class="lane-active" style="fill:${color}" x="${s1}" y="${ly + 5}" width="${Math.max(0, a1 - s1)}" height="${laneH - 10}" rx="3"/>`);
+    }
     if (r.ownedOutrightMonth > r.month) {
       const l1 = x(Math.min(end, r.ownedOutrightMonth));
       parts.push(`<rect class="lane-loan" style="fill:${color}" x="${s1}" y="${ly + 2}" width="${l1 - s1}" height="${laneH - 4}" rx="4"/>`);
@@ -145,6 +149,7 @@ export function renderTimeline(container, result, goals, { payChanges = [], reti
   result.goals.forEach((r, i) => {
     if (!r.reached) return;
     events.set(r.month, [...(events.get(r.month) || []), `${goals[i].verb || 'Buy'} ${goals[i].name}`]);
+    if (r.endedMonth != null) events.set(r.endedMonth, [...(events.get(r.endedMonth) || []), `Move out of ${goals[i].name}, deposit back`]);
     if (r.ownedOutrightMonth > r.month) events.set(r.ownedOutrightMonth, [...(events.get(r.ownedOutrightMonth) || []), `${goals[i].name} loan paid off`]);
   });
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -46,7 +46,7 @@
 
   <nav class="tabs" role="tablist" aria-label="Sections">
     <a href="#plan" role="tab" id="tab-plan" aria-controls="panel-plan" class="tab"><span class="tab-n">1</span>Your plan</a>
-    <a href="#people" role="tab" id="tab-people" aria-controls="panel-people" class="tab"><span class="tab-n">2</span>People &amp; income <span class="badge" id="people-count"></span></a>
+    <a href="#people" role="tab" id="tab-people" aria-controls="panel-people" class="tab"><span class="tab-n">2</span>You <span class="badge" id="people-count"></span></a>
     <a href="#goals" role="tab" id="tab-goals" aria-controls="panel-goals" class="tab"><span class="tab-n">3</span>Goals <span class="badge" id="goal-count"></span></a>
     <a href="#retirement" role="tab" id="tab-retirement" aria-controls="panel-retirement" class="tab"><span class="tab-n">4</span>Retirement</a>
     <a href="#costs" role="tab" id="tab-costs" aria-controls="panel-costs" class="tab"><span class="tab-n">5</span>Cost breakdown</a>
@@ -70,6 +70,7 @@
           <span><i class="lg-saving"></i>Saving for the goal</span>
           <span><i class="lg-loan"></i>Repaying a loan</span>
           <span><i class="lg-dot"></i>Goal reached</span>
+          <span><i class="lg-active"></i>Renting</span>
           <span><i class="lg-pay"></i>Pay change</span>
           <span><i class="lg-reserve"></i>Emergency money kept</span>
           <span><i class="lg-retire"></i>Retired</span>
@@ -137,6 +138,8 @@
         <button type="button" class="add-btn" data-add="house">House</button>
         <button type="button" class="add-btn" data-add="car">Car</button>
         <button type="button" class="add-btn" data-add="wedding">Wedding</button>
+        <button type="button" class="add-btn" data-add="rent">Rent a place</button>
+        <button type="button" class="add-btn" data-add="custom">Custom goal</button>
       </div>
       <div class="next-row"><a class="next-btn" href="#plan">See your plan →</a></div>
     </section>
@@ -153,7 +156,7 @@
           <div id="retire-fields"></div>
           <h3 class="mini-h">When</h3>
           <ul id="retire-ages" class="ages"></ul>
-          <a class="text-link" href="#people">Change ages in People &amp; income →</a>
+          <a class="text-link" href="#people">Change ages in the You tab →</a>
         </section>
         <section class="card retire-result" id="retire-result" aria-live="polite"></section>
       </div>

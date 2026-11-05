@@ -103,7 +103,24 @@ export const PRICES = {
       compactHybrid: { label: 'Hybrid hatchback (Aqua class)', newPrice: 15_500_000, kmPerLitre: 26, servicePer5000km: 25_000, tyreSet: 80_000 },
       midSuv: { label: 'Hybrid crossover (Vezel class)', newPrice: 19_800_000, kmPerLitre: 20, servicePer5000km: 30_000, tyreSet: 120_000 },
       luxurySuv: { label: 'Large 4x4 (Prado class)', newPrice: 63_500_000, kmPerLitre: 9, servicePer5000km: 75_000, tyreSet: 350_000 },
+      // Electric: kmPerKWh instead of km per litre; servicing is cheaper (no oil, fewer parts).
+      evSmall: { label: 'Electric hatchback (BYD Dolphin class)', fuel: 'electric', newPrice: 12_500_000, kmPerKWh: 6.5, servicePer10000km: 18_000, tyreSet: 90_000 },
+      evSuv: { label: 'Electric compact SUV (BYD Atto 3 class)', fuel: 'electric', newPrice: 19_500_000, kmPerKWh: 6.0, servicePer10000km: 22_000, tyreSet: 120_000 },
+      evPremium: { label: 'Electric sedan / SUV (BYD Seal class)', fuel: 'electric', newPrice: 28_000_000, kmPerKWh: 6.0, servicePer10000km: 30_000, tyreSet: 160_000 },
     },
+    // Electricity for charging (Rs per kWh, 2026)
+    electricity: {
+      home: 75,        // household block above 180 units a month; an EV usually pushes a home into it
+      homeNight: 30,   // optional time-of-use tariff, charging overnight (estimate)
+      solar: 20,       // rooftop solar: the value of power you'd otherwise export (estimate)
+      publicFast: 110, // DC fast chargers
+    },
+    chargingLossPct: 10, // energy lost while charging
+    homeCharger: 250_000, // wall charger + wiring
+    evDepreciationFirstYearPct: 12,
+    evDepreciationPerYearPct: 7, // batteries age, so used EVs lose value faster
+    evTyreKm: 35_000, // instant torque wears tyres a little faster
+    evBatteryWarnAge: 8,
     // Sri Lankan used cars hold value unusually well (import limits, high taxes).
     depreciationFirstYearPct: 8,
     depreciationPerYearPct: 4,
@@ -114,6 +131,23 @@ export const PRICES = {
     accessories: { new: 75_000, used: 50_000 },
     inspection: 15_000,
     revenueLicencePerYear: 8_000,
+  },
+
+  rent: {
+    // Monthly rent for a 2-bedroom, unfurnished place (ikman.lk / LankaPropertyWeb listings, 2026)
+    perMonth2br: {
+      colombo_city: 250_000, colombo_suburbs: 110_000, kandy: 75_000, galle: 70_000,
+      gampaha: 60_000, kalutara: 50_000, outstation: 35_000,
+    },
+    typeFactor: { annex: 0.55, apartment: 1.0, house: 1.1 },
+    bedroomFactor: { 1: 0.7, 2: 1.0, 3: 1.35, 4: 1.7 },
+    furnishedFactor: 1.3,
+    depositMonths: 6, // refundable security deposit / "key money": usually 3–6 months
+    advanceMonths: 1, // first month paid up front
+    agentMonths: 1,
+    moving: 40_000,
+    setup: 150_000, // curtains, kitchen basics, gas cylinder, small repairs
+    billsPerMonth: 12_000, // electricity & water not already in living costs
   },
 
   wedding: {

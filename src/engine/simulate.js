@@ -146,7 +146,19 @@ export function simulate(household, goals, options = {}) {
       const split = (amount) => { const a = new Array(n).fill(0); ps.forEach((i, k) => { a[i] = amount * weights[k]; }); return a; };
       if (plan.principal > 0) loans.push({ goalId: g.id, emi: plan.emi, shares: split(plan.emi), start: m, end: m + plan.months });
       const runningToday = g.running ? evaluate(g.running).today : 0;
-      running.push({ goalId: g.id, shares: split(runningToday) });
+      running.push({ goalId: g.id, shares: split(runningToday), weights: split(1), refund: (g.refundToday || 0) * inflation, end: null });
+
+      // This goal may replace earlier ones (buying a house ends renting): their running
+      // costs stop now, and any refundable deposit goes back to whoever paid it.
+      if (Array.isArray(g.ends) && g.ends.length) {
+        running.forEach((r) => {
+          if (r.end != null || !g.ends.includes(r.goalId)) return;
+          r.end = m;
+          people.forEach((_, k) => { bal[k] += r.refund * r.weights[k]; });
+          const ended = results.find((x) => x.id === r.goalId);
+          if (ended) Object.assign(ended, { endedMonth: m, endedBy: g.name, refunded: r.refund });
+        });
+      }
 
       Object.assign(results[next], {
         reached: true,
@@ -172,7 +184,7 @@ export function simulate(household, goals, options = {}) {
       const expenses = retired ? ((R.monthlySpending || 0) * inflation) / n : expensesAt(p, m) * inflation;
       if (retired) incomes[i] += ((R.monthlyIncome || 0) * inflation) / n;
       const loanPay = emiOf(i);
-      const run = running.reduce((s, r) => s + r.shares[i], 0) * inflation;
+      const run = running.reduce((s, r) => s + (r.end == null || m < r.end ? r.shares[i] : 0), 0) * inflation;
       const surplus = incomes[i] - expenses - loanPay - run + extra / n;
       const interest = bal[i] > 0 ? bal[i] * monthlyReturn : 0;
       bal[i] += interest + surplus;

@@ -49,13 +49,17 @@ gh repo create wishclock --public --source=. --push
 
 Every `git push` to `main` updates the site.
 
+## Speech bubble
+
+The plan banner shows a cheeky one-liner in a speech bubble under the headline, picked from five moods based on your numbers: 🔥 sinking (costs exceed income now, or no goal fits), 😬 far off (half the goals or more out of reach, retirement short by 10%+, or savings running out before 75), 🤏 so close (one goal out of reach, or retirement just short), 🙂 on track, and 🚀 crushing it (everything within 10 years and an early retirement). The lines live in `src/ui/quips.js`. One line per mood is picked each visit, so it doesn't change while you type.
+
 ## Light and dark mode
 
 The sun / moon / screen switch in the header picks **Light**, **Dark** or **Auto**. Auto is the default and follows the device's setting. The choice is saved in the browser (`wishclock:theme`) and applied by a small script in `<head>` before the page draws, so it never flashes the wrong colours. All colours are CSS variables at the top of `css/styles.css`.
 
 ## First-visit tour
 
-First-time visitors see a short tour of 6 centred cards: what the site does, then People & income, Goals, Your plan and Retirement. The page switches to each tab in the background as the card explains it.
+First-time visitors see a short tour of 6 centred cards: what the site does, then You, Goals, Your plan and Retirement. The page switches to each tab in the background as the card explains it.
 
 A visitor counts as new if their browser has no `wishclock:tour-seen` flag in `localStorage`. The flag is saved when they finish or skip the tour, so the tour isn't shown again on that browser. Another browser, another device or cleared browser data count as a first visit again. The **How it works** button in the header replays the tour any time. Edit the cards in `src/ui/tour.js`.
 
@@ -94,8 +98,10 @@ src/
   modules/house.js      options → cost tree for a house
   modules/car.js        … for a car (new or used, with depreciation)
   modules/wedding.js    … for a wedding (venue rules, alcohol, homecoming)
+  modules/rent.js       … for renting (estimated rent, refundable deposit)
+  modules/custom.js     … for any goal the user defines
   modules/index.js      the list of goal types
-  ui/                   tabs (Plan, People & income, Goals, Retirement, Cost breakdown), forms, chart
+  ui/                   tabs (Plan, You, Goals, Retirement, Cost breakdown), forms, chart
 tests/                  node:test unit tests
 ```
 
@@ -140,6 +146,14 @@ Add 1 to 4 people who save together, like you and a partner. Each person has:
 
 Each goal has a **Who pays** setting: together, or only one person. A shared goal uses everyone's savings, taking from each pot in proportion to its size. Its loan instalments and running costs are split by income, and the bank's loan limit is based on the payers' combined income. A personal goal uses only that person's money.
 
+### Renting, then buying
+
+The **Rent a place** goal estimates monthly rent from the area, type (annex, apartment or house), bedrooms and furnishing, or you can enter the rent yourself. Before moving in you save for the refundable deposit (usually 3–6 months' rent), the first month, an optional agent's fee, and moving costs. Rent and bills then add to your monthly costs. When a later **House** goal is bought (with "Move out of my rented place" on), the rent stops and the deposit is paid back into your savings.
+
+### Custom goals
+
+A **Custom goal** is anything else: a trip, a degree, a motorbike, a business. You set its name, what it costs today, whether its price rises with inflation, at your own rate or not at all, any monthly cost afterwards, and cash or a loan. Presets fill in common examples.
+
 ### Loans are optional
 
 At the top of the Goals tab, choose **Use loans where they help** or **No loans, cash only**. With no loans, every goal is paid fully from savings and the loan fields are hidden. With loans allowed, each house or car can still be set to *Cash only, no loan* on its own.
@@ -160,6 +174,7 @@ The main timeline runs from today to at least 2070. It stretches further when a 
 
 - **House:** land price by area, a structural premium for each extra floor, plot coverage limits, a bathroom count derived from bedrooms, and rent that stops once you move in.
 - **Car:** used-car value from age and mileage (Sri Lankan cars hold their value), plus fuel, servicing, tyres, insurance and the revenue licence.
+- **Electric cars:** charging replaces fuel. Units used = km ÷ km per unit, plus 10% charging loss, split between home charging (normal tariff above 180 units, an overnight time-of-use tariff, or rooftop solar) and public fast chargers. There's an optional home wall charger, cheaper servicing every 10,000 km, slightly faster tyre wear, faster depreciation for used EVs because batteries age, and a battery-health warning for older ones. The breakdown shows what a similar petrol car would spend on fuel.
 - **Wedding:** venue capacity with an automatic upgrade to a bigger venue, minimum-plate guarantees, half-price children's plates, alcohol worked out by drinkers × drinks ÷ 16 pegs per bottle plus corkage, invitations per household, cake pieces for guests, a homecoming built with the same rules, and a 5% contingency.
 
 ## Add a new goal type

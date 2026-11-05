@@ -88,3 +88,58 @@ test('wedding: alcohol scales with drinkers and adds corkage', () => {
 test('wedding: more guests cost more', () => {
   assert.ok(total({ kind: 'wedding', options: { guests: 400 } }) > total({ kind: 'wedding', options: { guests: 200 } }));
 });
+
+import { estimateRent } from '../src/modules/rent.js';
+
+test('rent: bigger, furnished and more central places cost more; deposit is refundable', () => {
+  const base = { type: 'apartment', location: 'gampaha', bedrooms: 2, furnished: false };
+  assert.equal(estimateRent(base), PRICES.rent.perMonth2br.gampaha);
+  assert.ok(estimateRent({ ...base, bedrooms: 3 }) > estimateRent(base));
+  assert.ok(estimateRent({ ...base, furnished: true }) > estimateRent(base));
+  assert.ok(estimateRent({ ...base, location: 'colombo_city' }) > estimateRent(base));
+  const g = buildGoal({ kind: 'rent', options: { rentOverride: 50_000, depositMonths: 4 } });
+  assert.equal(g.refundToday, 200_000);
+});
+
+test('custom goal: price, growth choice and loan', () => {
+  const g = buildGoal({ kind: 'custom', name: 'Trip', options: { price: 500_000, growth: 'none' } });
+  assert.equal(evaluate(g.tree, { months: 60, growthPct: 6 }).total, 500_000);
+  const infl = buildGoal({ kind: 'custom', name: 'Trip', options: { price: 500_000, growth: 'inflation' } });
+  assert.ok(evaluate(infl.tree, { months: 12, growthPct: 6 }).total > 500_000);
+  const loan = buildGoal({ kind: 'custom', name: 'Degree', options: { financing: 'loan' } });
+  assert.equal(loan.financing.type, 'loan');
+  assert.equal(evaluate(loan.tree).financeableTotal, 1_000_000);
+});
+
+test('house ends rent goals when the toggle is on', () => {
+  assert.deepEqual(buildGoal({ kind: 'house', options: { endsRent: true } }).endsKinds, ['rent']);
+  assert.deepEqual(buildGoal({ kind: 'house', options: { endsRent: false } }).endsKinds, []);
+});
+
+import { chargingCost } from '../src/modules/car.js';
+
+test('electric car: charging replaces fuel and depends on where you charge', () => {
+  const cls = PRICES.car.classes.evSmall;
+  const c = chargingCost({ kmPerMonth: 1300, homeCharging: 'normal', publicPct: 0 }, cls);
+  assert.ok(Math.abs(c.kwh - (1300 / cls.kmPerKWh) * 1.1) < 1e-9);
+  assert.equal(c.publicKwh, 0);
+  const run = (o) => evaluate(buildGoal({ kind: 'car', options: { carClass: 'evSmall', kmPerMonth: 1300, ...o } }).running).today;
+  assert.ok(run({ homeCharging: 'solar', publicPct: 0 }) < run({ homeCharging: 'night', publicPct: 0 }));
+  assert.ok(run({ homeCharging: 'night', publicPct: 0 }) < run({ homeCharging: 'normal', publicPct: 0 }));
+  assert.ok(run({ homeCharging: 'normal', publicPct: 100 }) > run({ homeCharging: 'normal', publicPct: 0 }));
+  const rows = flatten(evaluate(buildGoal({ kind: 'car', options: { carClass: 'evSmall' } }).running)).map((r) => r.label);
+  assert.ok(!rows.includes('Fuel'));
+});
+
+test('electric car: home charger is a one-off cost, used EVs lose value faster', () => {
+  const withCharger = total({ kind: 'car', options: { carClass: 'evSmall', homeCharger: true, publicPct: 10 } });
+  const without = total({ kind: 'car', options: { carClass: 'evSmall', homeCharger: false, publicPct: 10 } });
+  assert.equal(withCharger - without, PRICES.car.homeCharger);
+  assert.ok(usedValueFactor(6, 72_000, true) < usedValueFactor(6, 72_000, false));
+});
+
+test('electric running costs are lower than a similar petrol car at home rates', () => {
+  const ev = evaluate(buildGoal({ kind: 'car', options: { carClass: 'evSuv', kmPerMonth: 1500 } }).running).today;
+  const petrol = evaluate(buildGoal({ kind: 'car', options: { carClass: 'compactSuv', kmPerMonth: 1500 } }).running).today;
+  assert.ok(ev < petrol);
+});

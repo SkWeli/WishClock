@@ -10,9 +10,10 @@ import { startVisitCounter } from './visits.js';
 import { startTour, hasSeenTour } from './tour.js';
 import { goalIcon, ICONS } from './icons.js';
 import { initThemeSwitch } from './theme.js';
+import { moodOf, quipFor } from './quips.js';
 
 // Bump this when the example plan changes, so everyone starts from the new example.
-const STORAGE_KEY = 'wishclock:v3';
+const STORAGE_KEY = 'wishclock:v4';
 const OLD_KEY = 'wishclock:v1';
 const $ = (sel, root = document) => root.querySelector(sel);
 const startDate = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); };
@@ -58,7 +59,7 @@ const RETIRE_FIELDS = [
   { key: 'withdrawalPct', label: 'Safe withdrawal rate', type: 'number', suffix: '% a year', min: 2, max: 8, step: 0.25, group: '',
     help: '4% means you need 25× your yearly spending.' },
 ];
-const RETIRE_DEFAULTS = { annualExpenses: 840_000, hasPension: false, guaranteedIncome: 600_000, lumpSums: 3_000_000, withdrawalPct: 4 };
+const RETIRE_DEFAULTS = { annualExpenses: 840_000, hasPension: false, guaranteedIncome: 600_000, lumpSums: 6_000_000, withdrawalPct: 4 };
 const PERSON_DEFAULTS = { status: 'permanent', pay: 150_000, payAfter: 150_000, expenses: 60_000, expensesAfter: 60_000, savings: 0, buffer: 100_000, age: 28, retireAge: 60 };
 
 const ASSUMPTION_FIELDS = [
@@ -74,7 +75,7 @@ const uid = (p = 'g') => `${p}${Date.now().toString(36)}${(uidCounter++).toStrin
 
 function newGoal(kind, slot, overrides = {}, name) {
   const mod = MODULES[kind];
-  return { id: uid(), kind, name: name ?? mod.label, slot, open: false, payer: 'all', options: { ...mod.defaults(), ...overrides } };
+  return { id: uid(), kind, name: name ?? mod.defaultName ?? mod.label, slot, open: false, payer: 'all', options: { ...mod.defaults(), ...overrides } };
 }
 
 function newPerson(n) {
@@ -85,7 +86,7 @@ function defaultState() {
   const e = PRICES.economy;
   return {
     people: [
-      { id: 'p1', name: 'You', status: 'intern', pay: 50_000, changeAt: ym(addMonths(startDate(), 8)), payAfter: 300_000, expenses: 30_000, expensesAfter: 110_000, savings: 300_000, buffer: 150_000, age: 24, retireAge: 55 },
+      { id: 'p1', name: 'You', status: 'intern', pay: 50_000, changeAt: ym(addMonths(startDate(), 8)), payAfter: 300_000, expenses: 30_000, expensesAfter: 75_000, savings: 300_000, buffer: 150_000, age: 24, retireAge: 55 },
     ],
     retirement: { ...RETIRE_DEFAULTS },
     allowLoans: true,
@@ -93,6 +94,7 @@ function defaultState() {
     extra: 0,
     goals: [
       newGoal('wedding', 2),
+      newGoal('rent', 3, { type: 'annex', bedrooms: 2, depositMonths: 4, setup: 120_000 }, 'Rented annex'),
       { ...newGoal('house', 0), open: true },
       newGoal('car', 1, { carClass: 'compactHybrid', condition: 'used', ageYears: 5, mileageKm: 60_000 }),
     ],
@@ -392,7 +394,7 @@ $('#goal-list').addEventListener('change', (e) => {
   const before = visibility(fields, g.options);
   g.options[f.key] = clampField(f, readField(f, e.target));
   if (f.type === 'number' || f.type === 'money') e.target.value = g.options[f.key];
-  if (visibility(fields, g.options) !== before) rerenderGoalForm(card, g);
+  if (visibility(fields, g.options) !== before || fields.some((x) => typeof x.help === 'function')) rerenderGoalForm(card, g);
   schedule();
 });
 
@@ -403,7 +405,9 @@ $('#goal-list').addEventListener('click', (e) => {
   if (!g) return;
   const i = state.goals.indexOf(g);
   if (btn.dataset.preset) {
-    g.options = { ...MODULES[g.kind].defaults(), ...MODULES[g.kind].presets[btn.dataset.preset] };
+    const { _name, ...preset } = MODULES[g.kind].presets[btn.dataset.preset];
+    g.options = { ...MODULES[g.kind].defaults(), ...preset };
+    if (_name) { g.name = _name; card.querySelector('.goal-name').value = _name; }
     rerenderGoalForm(card, g);
     schedule();
     return;
@@ -425,7 +429,8 @@ document.querySelectorAll('[data-add]').forEach((btn) =>
     const slot = [0, 1, 2, 3, 4, 5, 6, 7].find((s) => !used.has(s)) ?? state.goals.length % 8;
     const kind = btn.dataset.add;
     const count = state.goals.filter((g) => g.kind === kind).length;
-    state.goals.push({ ...newGoal(kind, slot, {}, count ? `${MODULES[kind].label} ${count + 1}` : undefined), open: true });
+    const base = MODULES[kind].defaultName ?? MODULES[kind].label;
+    state.goals.push({ ...newGoal(kind, slot, {}, count ? `${base} ${count + 1}` : undefined), open: true });
     renderGoals();
     schedule();
     document.querySelector('.goal:last-child .goal-name')?.focus();
@@ -484,6 +489,10 @@ function payChanges() {
 let lastRun = null;
 function renderResults() {
   const built = state.goals.map(buildForPlan);
+  // A goal can replace earlier ones (a house ends renting).
+  built.forEach((g, i) => {
+    g.ends = g.endsKinds.length ? built.slice(0, i).filter((b) => g.endsKinds.includes(b.kind)).map((b) => b.id) : [];
+  });
   // Show at least to 2070. Stretch further when something happens later: a purchase or loan
   // (the simulation keeps going until those finish) or retirement (plus 5 years of retired life).
   const TIMELINE_MIN_END = '2070-12';
@@ -496,8 +505,9 @@ function renderResults() {
     const el = document.querySelector(`.goal[data-id="${g.id}"] .goal-cost`);
     if (el) el.textContent = `${money(evaluate(g.tree).today)} today`;
   });
-  $('#people-count').textContent = state.people.length;
-  $('#goal-count').textContent = state.goals.length;
+  const np = state.people.length, ng = state.goals.length;
+  $('#people-count').textContent = `${np} ${np === 1 ? 'person' : 'people'}`;
+  $('#goal-count').textContent = `${ng} ${ng === 1 ? 'goal' : 'goals'}`;
 
   renderRetirement(built);
   $('#headline').innerHTML = headline(result);
@@ -516,7 +526,7 @@ function renderRetirement(built) {
   if (rm <= 0) {
     lastRetire = null;
     $('#retire-card').innerHTML = '';
-    $('#retire-result').innerHTML = '<p class="empty">Everyone is already at retirement age. Change ages in People &amp; income.</p>';
+    $('#retire-result').innerHTML = '<p class="empty">Everyone is already at retirement age. Change ages in the You tab.</p>';
     return;
   }
   const horizonMonth = Math.max(rm + 60, ...state.people.map((p) => Math.round((85 - (p.age || 30)) * 12)));
@@ -643,9 +653,10 @@ function headline(result) {
   const goals = result.goals;
   const many = state.people.length > 1;
   const eyebrow = `<span class="eyebrow">${ICONS.clock} Your plan${many ? ` · ${state.people.length} people` : ''}</span>`;
+  const quip = bubble(result);
   if (!goals.length) return `<div class="hero">${eyebrow}<h2>Add a goal to start</h2><p><a class="hero-link" href="#goals">Go to Goals →</a></p></div>`;
   const missing = goals.filter((g) => !g.reached);
-  if (missing.length === goals.length) return `<div class="hero">${eyebrow}<h2>None of these goals fit the budget yet</h2><p>${esc(missing[0].reason)}</p></div>`;
+  if (missing.length === goals.length) return `<div class="hero"><div class="hero-main">${eyebrow}<h2>None of these goals fit the budget yet</h2>${quip}<p>${esc(missing[0].reason)}</p></div></div>`;
   const reached = goals.filter((g) => g.reached);
   const lastBuy = Math.max(...reached.map((g) => g.month));
   const debtFree = Math.max(...reached.map((g) => g.ownedOutrightMonth));
@@ -672,10 +683,28 @@ function headline(result) {
     } : null,
   ].filter(Boolean);
   return `<div class="hero">
-    <div class="hero-main">${eyebrow}<h2>${title}</h2>${sub ? `<p>${sub}</p>` : ''}</div>
+    <div class="hero-main">${eyebrow}<h2>${title}</h2>${quip}${sub ? `<p>${sub}</p>` : ''}</div>
     <div class="hero-stats">${stats.map((st) => `<${st.href ? `a href="${st.href}"` : 'div'} class="stat${st.tone ? ` stat-${st.tone}` : ''}">
       <span class="stat-label">${st.label}</span><b class="stat-value">${st.value}</b><span class="stat-sub">${st.sub}</span></${st.href ? 'a' : 'div'}>`).join('')}</div>
   </div>`;
+}
+
+/** Speech bubble with a line that matches how the plan is going. */
+function bubble(result) {
+  const reached = result.goals.filter((g) => g.reached);
+  const firstYear = result.points.slice(0, 12);
+  const marks = retirementMarks(result);
+  const age0 = state.people[0]?.age || 30;
+  const mood = moodOf({
+    goals: result.goals,
+    monthsToAll: reached.length === result.goals.length && reached.length ? Math.max(...reached.map((g) => g.month)) : null,
+    firstYearSurplus: firstYear.length ? firstYear.reduce((s, p) => s + p.surplus, 0) / firstYear.length : 0,
+    runsOutAge: marks && marks.runsOut != null ? age0 + marks.runsOut / 12 : null,
+    retireShortPct: lastRetire ? lastRetire.shortfall / Math.max(1, lastRetire.target.needed) : null,
+    retireEarly: !!(lastRetire && lastRetire.earliestMonth != null && lastRetire.earliestMonth < lastRetire.retireMonth),
+  });
+  const q = quipFor(mood);
+  return `<div class="quip quip-${mood}" role="note"><span class="quip-emoji" aria-hidden="true">${q.emoji}</span><span class="quip-text">${esc(q.text)}</span></div>`;
 }
 
 function shareText(r) {
@@ -712,6 +741,9 @@ function tile(g, r, base) {
     : '';
   const ongoing = p.principal > 0 || Math.abs(r.runningAtPurchase) > 1;
   const share = Object.keys(r.shares || {}).length > 1 && !ongoing ? 'Together, from savings' : shareText(r);
+  const movesOut = r.endedMonth != null
+    ? `<dt>Moves out</dt><dd>${monthYear(addMonths(startDate(), r.endedMonth))}<span class="sub">when you move into the ${esc(r.endedBy.toLowerCase())} · ${money(r.refunded)} deposit back</span></dd>`
+    : g.kind === 'rent' ? '<dt>Moves out</dt><dd>Not planned<span class="sub">Add a house below to stop renting</span></dd>' : '';
   const who = share ? `<dt>${Object.keys(r.shares).length > 1 && ongoing ? 'Monthly split' : 'Paid by'}</dt><dd>${share}</dd>` : '';
   const capped = p.limitedByIncome
     ? `<p class="tile-note">The loan is capped by pay (instalments ≤ ${state.assumptions.maxDebtToIncomePct}%), so a bigger down payment is saved first.</p>`
@@ -723,7 +755,7 @@ function tile(g, r, base) {
     <dl>
       <dt>Price then</dt><dd>${money(p.total)}<span class="sub">${money(r.priced.today)} today</span></dd>
       <dt>${p.principal > 0 ? 'Cash paid' : 'Paid'}</dt><dd>${money(r.cashPaid)}</dd>
-      ${loan}${running}${who}
+      ${loan}${running}${movesOut}${who}
     </dl>${capped}
   </article>`;
 }

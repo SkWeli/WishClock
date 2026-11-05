@@ -4,6 +4,7 @@ import { esc } from './format.js';
 export function fieldHtml(field, value, prefix, values = {}) {
   const id = `${prefix}-${field.key}`;
   field = { ...field, label: typeof field.label === 'function' ? field.label(values) : field.label };
+  if (typeof field.help === 'function') field.help = field.help(values);
   const help = field.help ? `<small class="help">${esc(field.help)}</small>` : '';
   if (field.type === 'toggle') {
     return `<div class="field field-toggle">

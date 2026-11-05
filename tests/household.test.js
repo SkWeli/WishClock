@@ -58,3 +58,19 @@ test('a personal goal for someone who removed from the household falls back to e
   const r = simulate(hh, [cash('x', 500_000, { payer: 'ghost' })], { startDate: start });
   assert.equal(r.goals[0].month, 10);
 });
+
+test('buying a house ends renting: rent stops and the deposit comes back', () => {
+  const hh = { ...base, people: [{ id: 'a', pay: 100_000, expenses: 20_000, savings: 0 }] };
+  const rentGoal = { id: 'r', name: 'Flat', tree: item('Deposit', 1, 200_000), running: item('Rent', 1, 30_000), financing: { type: 'cash' }, refundToday: 180_000 };
+  const house = { id: 'h', name: 'House', tree: item('House', 1, 1_000_000), financing: { type: 'cash' }, ends: ['r'] };
+  const r = simulate(hh, [rentGoal, house], { startDate: start });
+  assert.equal(r.goals[0].month, 3);              // 80k a month → 240k by month 3
+  assert.equal(r.points[3].runningCosts, 30_000); // renting
+  const hm = r.goals[1].month;
+  assert.equal(r.goals[0].endedMonth, hm);
+  assert.equal(r.goals[0].endedBy, 'House');
+  assert.equal(r.points[hm].runningCosts, 0);     // rent stopped
+  // balance after purchase includes the refunded deposit
+  const before = r.points[hm - 1].balance;
+  assert.equal(r.points[hm].balance, before - 1_000_000 + 180_000 + 80_000);
+});

@@ -15,7 +15,7 @@ const STEPS = [
   { tab: 'people', icon: '👥', title: '1. Add who is saving',
     body: 'Enter take-home pay, living costs and savings for you, and your partner if you plan together. On an <strong>intern salary</strong>? Add the month you go permanent and your expected pay.' },
   { tab: 'goals', icon: '🏠', title: '2. Add your goals, in order',
-    body: 'Add a house, car or wedding, then tap <strong>Edit</strong> to set details: floors, furniture, guests, venue. Start from a preset if you’re unsure. Choose loans or cash only at the top.' },
+    body: 'Add a wedding, a rented place, a house, a car or <strong>your own custom goal</strong>, then tap <strong>Edit</strong> to set details: floors, furniture, guests, venue. Start from a preset if you’re unsure. Choose loans or cash only at the top.' },
   { tab: 'plan', icon: '📈', title: '3. See your plan',
     body: 'Each goal shows <strong>how long until you can buy it</strong>. The timeline shows your savings growing, then dropping as each goal happens. Try the <strong>“What if you saved more?”</strong> slider.' },
   { tab: 'retirement', icon: '🌴', title: '4. Check retirement',

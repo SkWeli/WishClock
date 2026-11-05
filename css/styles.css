@@ -563,3 +563,90 @@ select:focus-visible, .month-input:focus-visible { outline: none; border-color: 
 html { transition: none; }
 body, .card, .tile, .goal, .hero { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
 @media (max-width: 420px) { .ghost-btn .long { display: none; } .head-btns { gap: 6px; } .theme-switch button { width: 30px; } }
+
+.chart .lane-active { opacity: 0.55; }
+.lg-active { width: 18px; height: 8px; border-radius: 3px; background: var(--series-4); opacity: 0.55; }
+
+/* ---------- Text: full width, justified ---------- */
+.panel.narrow { max-width: none; }
+.panel-head p, .card-intro, .foot, .hero p, .ages-note, .whatif-result, .retire-advice,
+.tile-note, .tile-reason, .method, .loan-note, .tour-card p, .help { max-width: none; }
+.foot { margin-top: 28px; }
+@media (min-width: 600px) {
+  .panel-head p, .card-intro, .foot p, .hero p, .ages-note, .whatif-result, .retire-advice,
+  .tile-note, .tile-reason, .tour-card p, .warnings li, .help {
+    text-align: justify; text-align-last: left; hyphens: auto; -webkit-hyphens: auto;
+  }
+}
+/* Short hints under inputs read better left-aligned (narrow columns justify badly). */
+@media (min-width: 600px) { .help { text-align: left; hyphens: manual; -webkit-hyphens: manual; } }
+/* One person's card fills the row; two or more share it. */
+.people { grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); }
+
+/* Tab counts read as words ("1 person", "5 goals"), not as another step number. */
+.badge {
+  background: transparent; color: var(--muted); border: 1px solid var(--line-strong);
+  border-radius: 6px; padding: 0 6px; font-size: 11.5px; font-weight: 600; line-height: 18px;
+}
+.tab.active .badge { color: var(--ink-2); border-color: var(--muted); }
+
+/* ---------- Browser-style tabs ----------
+   A darker strip runs across the page; tabs have rounded tops; the active tab takes
+   the page colour and sits over the strip's bottom line, so it joins the content. */
+:root { --tabstrip: #e6e9f1; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --tabstrip: #07090e; } }
+:root[data-theme="dark"] { --tabstrip: #07090e; }
+.tabs {
+  max-width: none; margin: 6px 0 0; gap: 4px; align-items: flex-end;
+  padding: 8px max(24px, calc((100% - 1192px) / 2)) 0;
+  background: var(--tabstrip); backdrop-filter: none;
+  border-bottom: 1px solid var(--line-strong);
+}
+.tab {
+  position: relative; padding: 10px 18px; margin-bottom: -1px;
+  border: 1px solid transparent; border-bottom: 0; border-radius: 12px 12px 0 0;
+  color: var(--muted); background: transparent; transition: background 0.15s, color 0.15s;
+}
+.tab:hover { color: var(--ink); background: color-mix(in srgb, var(--bg) 55%, transparent); }
+.tab.active {
+  color: var(--ink); background: var(--bg);
+  border-color: var(--line-strong); border-bottom: 1px solid var(--bg);
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+/* Small divider between inactive tabs, like a browser */
+.tab:not(.active) + .tab:not(.active)::before {
+  content: ''; position: absolute; left: -3px; top: 25%; height: 50%; width: 1px; background: var(--line-strong);
+}
+.tab.active + .tab::before, .tab:has(+ .tab.active)::before { display: none; }
+@media (max-width: 700px) { .tabs { padding: 6px 10px 0; gap: 2px; } .tab { padding: 9px 11px; } }
+/* Tabs share the full width of the strip (side padding kept); on narrow screens they keep
+   their natural width and the strip scrolls. */
+.tab { flex: 1 1 0; min-width: max-content; justify-content: center; }
+
+/* ---------- Speech bubble in the plan banner ---------- */
+.quip {
+  position: relative; display: inline-flex; align-items: center; gap: 10px; max-width: 100%;
+  background: #ffffff; color: #141a33; border-radius: 16px; padding: 10px 16px 10px 12px; margin-bottom: 18px;
+  font-weight: 700; font-size: 15px; line-height: 1.35; box-shadow: 0 6px 18px -6px rgb(0 0 0 / 0.45);
+  animation: quip-pop 0.35s cubic-bezier(.2,1.4,.4,1);
+}
+.quip::after {
+  content: ''; position: absolute; left: 26px; bottom: -9px; width: 18px; height: 18px; background: inherit;
+  transform: rotate(45deg); border-radius: 3px;
+}
+.quip-emoji { font-size: 22px; line-height: 1; flex: none; }
+.quip-text { position: relative; z-index: 1; }
+.quip-sinking { background: #ffe1dc; }
+.quip-farOff { background: #fff0d1; }
+.quip-close { background: #fff7c7; }
+.quip-onTrack { background: #e3f6ea; }
+.quip-crushing { background: #e2e5ff; }
+@keyframes quip-pop { from { opacity: 0; transform: translateY(6px) scale(0.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .quip { animation: none; } }
+
+/* Bubble sits under the headline, its tail pointing up at it. */
+.quip { margin: 16px 0 2px; }
+.quip::after { bottom: auto; top: -8px; }
+.quip + p { margin-top: 12px; }
+/* Long option names (car types, venues) get a wider field */
+@media (min-width: 600px) { .field:has(select[data-key="carClass"]), .field:has(select[data-key="venue"]), .field:has(select[data-key="homecomingVenue"]) { grid-column: span 2; } }

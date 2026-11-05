@@ -7,6 +7,8 @@ export const ICONS = {
   wedding: svg('<circle cx="9" cy="14" r="5.5"/><circle cx="15" cy="14" r="5.5"/><path d="m10.5 4 1.5 2.5L13.5 4"/>'),
   retire: svg('<path d="M12 21V11"/><path d="M12 11C9 7 5 7 3 9c3 0 6 .5 9 2Z"/><path d="M12 11c3-4 7-4 9-2-3 0-6 .5-9 2Z"/><path d="M12 11c0-4-2-7-5-8 1 3 3 5 5 8Z"/><path d="M7 21h10"/>'),
   people: svg('<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2A4.6 4.6 0 0 1 21 18.6"/>'),
+  rent: svg('<circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7"/><path d="m16.5 6.5 2.5 2.5"/><path d="m14 9 2 2"/>'),
+  custom: svg('<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z"/>'),
   clock: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
 };
 

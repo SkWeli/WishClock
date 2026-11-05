@@ -46,7 +46,10 @@ export const house = {
     { key: 'downPct', label: 'Down payment', type: 'number', suffix: '%', min: 10, max: 90, step: 5, group: 'Paying for it', showIf: (o) => o.financing === 'loan', help: 'Banks usually lend up to 70–80% of land + building' },
     { key: 'ratePct', label: 'Loan interest', type: 'number', suffix: '% a year', min: 5, max: 25, step: 0.25, group: 'Paying for it', showIf: (o) => o.financing === 'loan' },
     { key: 'years', label: 'Loan term', type: 'number', suffix: 'years', min: 5, max: 30, step: 1, group: 'Paying for it', showIf: (o) => o.financing === 'loan' },
-    { key: 'currentRent', label: 'Rent you stop paying', type: 'money', min: 0, max: 1_000_000, step: 5_000, group: 'Paying for it', help: 'Part of your expenses today; it ends when you move in' },
+    { key: 'endsRent', label: 'Move out of my rented place when I get this house', type: 'toggle', group: 'Moving in',
+      help: 'Ends any “Rent a place” goal above this one: rent stops and the deposit comes back.' },
+    { key: 'currentRent', label: 'Other rent you stop paying', type: 'money', min: 0, max: 1_000_000, step: 5_000, group: 'Moving in',
+      help: 'Only rent that is inside your living costs. Leave 0 if you added a “Rent a place” goal.' },
   ],
 
   defaults() {
@@ -55,7 +58,7 @@ export const house = {
       finish: 'standard', boundaryWall: true,
       furnished: true, furnitureTier: 'mid', masterBed: 'queen', otherBedrooms: 2, otherBedSize: 'double',
       pillowsPerBed: 2, sofaSeats: 5, tvCount: 1, tvSize: 55, diningSeats: 6, acUnits: 2, pantryFt: 12, appliances: true,
-      financing: 'loan', downPct: 30, ratePct: 13.5, years: 20, currentRent: 45_000,
+      financing: 'loan', downPct: 30, ratePct: 13.5, years: 20, endsRent: true, currentRent: 0,
     };
   },
 
@@ -171,6 +174,7 @@ export const house = {
         ? { type: 'loan', label: 'Housing loan', downPct: o.downPct, ratePct: o.ratePct, years: o.years }
         : { type: 'cash' },
       warnings,
+      endsKinds: o.endsRent ? ['rent'] : [],
     };
   },
 };
